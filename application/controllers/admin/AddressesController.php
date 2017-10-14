@@ -24,7 +24,8 @@ class Admin_AddressesController extends Indi_Controller_Admin {
             'Cache-Control: no-cache',
             'Connection: keep-alive',
             'Pragma: no-cache',
-            'User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36'
+            'User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36',
+            'Host: service.nalog.ru'
         );
 
         // Obtain cookies
@@ -32,7 +33,6 @@ class Admin_AddressesController extends Indi_Controller_Admin {
         $cur = curl_init($url);
         curl_setopt_array($cur, $optA);
         curl_setopt($cur, CURLOPT_HTTPHEADER, array_merge($hdrA, array(
-            'Host: service.nalog.ru',
             'Upgrade-Insecure-Requests: 1',
             'Referer: https://www.google.ru/'
         )));
@@ -53,7 +53,6 @@ class Admin_AddressesController extends Indi_Controller_Admin {
         $url = 'https://service.nalog.ru/static/captcha.html?a=' . $token;
         curl_setopt($cur, CURLOPT_URL, $url);
         curl_setopt($cur, CURLOPT_HTTPHEADER, array_merge($hdrA, array(
-            'Host: service.nalog.ru',
             'Referer: https://service.nalog.ru/addrfind.do'
         )));
         $response = curl_exec($cur);
@@ -90,8 +89,12 @@ class Admin_AddressesController extends Indi_Controller_Admin {
         ob_start(); $wait = $api->waitForResult(); $out = ob_get_clean();
         if (!$wait) jflush(false, '[step4] Не удалось разгадать капчу: ' . $out . ' ' . $api->getErrorMessage());
 
+        // Check if $api->getTaskSolution() call returned error code instead of captcha value, and if so - flush error
+        if (!Indi::rexm('int11', $code = $api->getTaskSolution()))
+            jflush(false, '[step4] Не удалось разгадать капчу: ' . $code);
+
         // Save captcha solution
-        $this->row->captchaCode = $api->getTaskSolution(); // ERROR_BAD_DUPLICATES
+        $this->row->captchaCode = $code;
         $this->row->save();
 
         // Prepare for picking image binary
@@ -125,7 +128,6 @@ class Admin_AddressesController extends Indi_Controller_Admin {
         curl_setopt($cur, CURLOPT_POSTFIELDS, $body = http_build_query($data));
         array_shift($hdrA);
         curl_setopt($cur, CURLOPT_HTTPHEADER, array_merge($hdrA, array(
-            'Host: service.nalog.ru',
             'Content-Length: ' . strlen($body),
             'Accept: application/json, text/javascript, */*; q=0.01',
             'Origin: https://service.nalog.ru',
@@ -143,7 +145,6 @@ class Admin_AddressesController extends Indi_Controller_Admin {
 
         // If response's status code is not 200 flush failure
         if (($code = curl_getinfo($cur, CURLINFO_HTTP_CODE)) != 200) {
-            i($response, 'a');
 
             // Build errors to display
             if ($json['ERRORS'])

@@ -1,19 +1,10 @@
 <?php
 class Address_Row extends Indi_Db_Table_Row {
 
-    /**
-     * @return int
-     */
-    public function save(){
+    public function onBeforeSave() {
 
         // Set `title`
         $this->title = $this->postcode .  ' ' . $this->city . ' ' . $this->address;
-
-        // Standard save
-        return parent::save();
-    }
-
-    public function onBeforeSave() {
 
         // If `postcode`, `city` and `address` props weren't modified - return
         if (!$this->isModified('title')) return;
