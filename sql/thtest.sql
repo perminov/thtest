@@ -1639,21 +1639,6 @@ CREATE TABLE `subscriber` (
 
 /*Data for the table `subscriber` */
 
-/*Table structure for table `tablename1` */
-
-DROP TABLE IF EXISTS `tablename1`;
-
-CREATE TABLE `tablename1` (
-  `test` year(4) NOT NULL,
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8;
-
-/*Data for the table `tablename1` */
-
-insert  into `tablename1`(`test`,`id`) values (0000,29);
-insert  into `tablename1`(`test`,`id`) values (0000,30);
-
 /*Table structure for table `url` */
 
 DROP TABLE IF EXISTS `url`;
