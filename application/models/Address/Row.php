@@ -1,13 +1,23 @@
 <?php
 class Address_Row extends Indi_Db_Table_Row {
 
+    /**
+     * Try to recognize address according to government's databases
+     */
     public function onBeforeSave() {
 
         // Set `title`
         $this->title = $this->postcode .  ' ' . $this->city . ' ' . $this->address;
 
         // If `postcode`, `city` and `address` props weren't modified - return
-        if (!$this->isModified('title')) return;
+        if (!$this->isModified('title')) {
+
+            // If `status` is 'done' set `isMass` prop either to 'yes' or 'no' depend on `llcQty`
+            if ($this->status == 'done') $this->isMass = $this->llcQty > 5 ? 'yes' : 'no';
+
+            // Return
+            return;
+        };
 
         // Setup curl
         curl_setopt_array($curl = curl_init(), array(
@@ -44,5 +54,23 @@ class Address_Row extends Indi_Db_Table_Row {
 
         // Set `dadata` prop
         $this->dadata = $response;
+
+        // Reset to default
+        $this->resetToDefaults(false);
+    }
+
+    /**
+     * Reset certain props to default values
+     */
+    public function resetToDefaults($save = true) {
+
+        // Reset other props to default values
+        foreach (ar('status,llcQty,updated,captchaTask,captchaCode,isMass') as $p) $this->zero($p, true);
+
+        // Remove captcha image file
+        $this->deleteFiles('captchaImg');
+
+        // Save if need
+        if ($save) $this->save();
     }
 }

@@ -4,6 +4,18 @@ class Admin_AddressesController extends Indi_Controller_Admin {
     /**
      *
      */
+    public function resetAction() {
+
+        // Reset props
+        $this->row->resetToDefaults();
+
+        // Flush success
+        jflush(true);
+    }
+
+    /**
+     *
+     */
     public function checkAction() {
 
         // Set no time limit and ignore user abort
@@ -90,8 +102,9 @@ class Admin_AddressesController extends Indi_Controller_Admin {
         if (!$wait) jflush(false, '[step4] Не удалось разгадать капчу: ' . $out . ' ' . $api->getErrorMessage());
 
         // Check if $api->getTaskSolution() call returned error code instead of captcha value, and if so - flush error
-        if (!Indi::rexm('int11', $code = $api->getTaskSolution()))
-            jflush(false, '[step4] Не удалось разгадать капчу: ' . $code);
+        if (!Indi::rexm('int11lz', $code = $api->getTaskSolution()))
+            jflush(false, '[step4] Не удалось разгадать капчу: '
+                . '<a target="_blank" href="' . Indi::ini('anticaptcha')->doc . '">' . $code . '</a>');
 
         // Save captcha solution
         $this->row->captchaCode = $code;
@@ -165,10 +178,10 @@ class Admin_AddressesController extends Indi_Controller_Admin {
         if (!$json['rowsFound']) jflush(true, 'В налоговой отсутствует информация о юрлицах, зарегистрирванных по данному адресу');
 
         // Set LLCs qty
-        $this->row->llcQty = $json['rows'][0]['REG_COUNT'];
+        $this->row->llcQty = array_sum(array_column($json['rows'], 'REG_COUNT'));
         $this->row->save();
 
         // Flush ok
-        jflush(true, 'По данному адресу зарегистрировано ' . tbq($this->row->llcQty, 'юрлиц,юрлицо,юрлиц'));
+        jflush(true, 'По данному адресу зарегистрировано ' . tbq($this->row->llcQty, 'юрлиц,юрлицо,юрлица'));
     }
 }
